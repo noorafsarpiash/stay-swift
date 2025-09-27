@@ -68,6 +68,6 @@
   }
 
   input[type="checkbox"] {
-    @apply mx-1;
+    @apply mx-1
   }
 }
