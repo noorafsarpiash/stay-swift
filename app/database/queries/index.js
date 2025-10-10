@@ -5,9 +5,13 @@ import {
 } from "@/utils/data-util";
 import { ratingModel } from "@/app/models/rating-model";
 import { reviewModel } from "@/app/models/review-model";
-export async function getAllHotels() {
-  const hotels = await hotelModel
-    .find()
+import { bookingModel } from "@/app/models/booking-model";
+import { isDate } from "next-auth/adapters";
+export async function getAllHotels(destination, checkin, checkout) {
+  const regex = new RegExp(destination, "i");
+
+  const hotelsBysDestination = await hotelModel
+    .find({ city: { $regex: regex } })
     .select([
       "thumbNailUrl",
       "name",
@@ -18,7 +22,26 @@ export async function getAllHotels() {
     ])
     .lean();
 
-  return replaceMongoIdInArray(hotels);
+  let allHotels = hotelsBysDestination;
+
+  if (checkin && checkout) {
+  }
+
+  return replaceMongoIdInArray(hotelsBysDestination);
+}
+
+async function findBooking(hotelId, checkin, checkout) {
+  const matches = await bookingModel
+    .find({ hotelId: hotelId.toString() })
+    .lean();
+
+  const found = matches.find((match) => {
+    return isDateInbetween(
+      isDateInbetween(checkin, match.checkin, match.checkout) ||
+        isDateInbetween(checkout, match.checkin, match.checkout)
+    );
+  });
+  return found;
 }
 
 export async function getHotelById(hotelId) {
